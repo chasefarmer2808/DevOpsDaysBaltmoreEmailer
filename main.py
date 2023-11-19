@@ -1,17 +1,17 @@
 import os.path
 import base64
 import csv
-import pprint
 
 from email.message import EmailMessage
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+load_dotenv()
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.compose"]
@@ -109,12 +109,12 @@ def read_cold_contacts_from_csv(filename, take):
 def main():
   creds = login()
   
-  cold_contacts = read_cold_contacts_from_csv("hitlist.csv", 1)
+  cold_contacts = read_cold_contacts_from_csv("hitlist.csv", int(os.environ["EMAIL_LIMIT"]))
 
   for contact in cold_contacts:
     to_email = contact["Email"]
     from_emails = ["cfarmer@baltimoredevopsdays.org", "baltimore@baltmoredevopsdays.org"]
-    from_name = "Chase Farmer"
+    from_name = os.environ["SENDER_NAME"]
     contact_name = contact["Contact Name"]
     company = contact["Company"]
     create_cold_sponsor_draft(creds, to_email, from_emails, from_name, contact_name, company)
