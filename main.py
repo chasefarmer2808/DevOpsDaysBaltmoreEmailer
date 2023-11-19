@@ -2,6 +2,8 @@ import os.path
 import base64
 
 from email.message import EmailMessage
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -37,16 +39,19 @@ def login():
 
   return creds
 
-def create_draft(creds):
+def create_cold_sponsor_draft(creds, to_email, from_emails, contact_name, sponsor_company):
   try:
     # create gmaiil api client
     service = build("gmail", "v1", credentials=creds)
 
     message = EmailMessage()
-    message.set_content("test draft")
-    message["To"] = "test@test.com"
-    message["From"] = "cfarmer@devopsdaysbaltimore.org"
-    message["Subject"] = "Test Draft"
+    content="Message body in <b>html</b> format!"
+
+    message["To"] = to_email
+    message["From"] = from_emails
+    message["Subject"] = f'DevOpsDays Baltimore Sponsorship - {sponsor_company}'
+    message.add_header('Content-Type','text/html')
+    message.set_payload(content)
 
     encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
@@ -66,7 +71,7 @@ def create_draft(creds):
 
 def main():
   creds = login()
-  create_draft(creds)
+  create_cold_sponsor_draft(creds, "test@test.com", ["cfarmer@baltimoredevopsdays.org", "baltimore@baltmoredevopsdays.org"], "test contact", "test company")
 
 if __name__ == "__main__":
   main()
