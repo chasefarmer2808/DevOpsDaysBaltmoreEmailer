@@ -92,32 +92,39 @@ def create_cold_sponsor_draft(creds, to_email, from_emails, from_name, contact_n
 
   return draft
 
-def read_cold_contacts_from_csv(filename, take):
+def read_cold_contacts_from_csv(filename):
   cold_contacts = []
 
   with open(filename, newline="") as csvfile:
       reader = csv.DictReader(csvfile)
+      print("Parsing CSV...")
       for row in reader:
         if row["Previous Sponsor?"].lower() == "no" and row["Initial Contact Email By"] == "":
+          print(f'Found cold sponsor: {row["Company"]}')
           cold_contacts.append(row)
           
-          if len(cold_contacts) == take:
-            break
 
+  print(f'Found {len(cold_contacts)} total cold sponsors')
   return cold_contacts
 
 def main():
   creds = login()
+  print("Successfully logged in to Google.")
+  print(f'Email Sender: {os.environ["SENDER_NAME"]}')
   
-  cold_contacts = read_cold_contacts_from_csv("hitlist.csv", int(os.environ["EMAIL_LIMIT"]))
+  cold_contacts = read_cold_contacts_from_csv("hitlist.csv")
 
-  for contact in cold_contacts:
+  draft_limit = int(os.environ["EMAIL_LIMIT"])
+  print(f'Creating drafts for {draft_limit} sponsors...')
+  for contact in cold_contacts[:draft_limit]:
     to_email = contact["Email"]
     from_emails = ["cfarmer@baltimoredevopsdays.org", "baltimore@baltmoredevopsdays.org"]
     from_name = os.environ["SENDER_NAME"]
     contact_name = contact["Contact Name"]
     company = contact["Company"]
+    print(f'Creating draft for {company}...')
     create_cold_sponsor_draft(creds, to_email, from_emails, from_name, contact_name, company)
+    print("done")
 
 if __name__ == "__main__":
   main()

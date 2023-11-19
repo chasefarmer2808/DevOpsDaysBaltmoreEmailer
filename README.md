@@ -14,3 +14,4 @@ Next, create a file called `.env` and copy the contents of `.env.example` into i
 - `SENDER_NAME` - The name of the person sending the email to go in the email signature. Usually set to your first and last name.
 
 Finally, run the tool with `python main.py`.
+**Note: Make sure to update the excel file on the Google Drive after inspecting and sending the draft!**
