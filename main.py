@@ -39,13 +39,34 @@ def login():
 
   return creds
 
-def create_cold_sponsor_draft(creds, to_email, from_emails, contact_name, sponsor_company):
+def create_cold_sponsor_draft(creds, to_email, from_emails, from_name, contact_name, sponsor_company):
+  if contact_name is None:
+    contact_name = "there"
+
   try:
     # create gmaiil api client
     service = build("gmail", "v1", credentials=creds)
 
     message = EmailMessage()
-    content="Message body in <b>html</b> format!"
+    content = """
+      Hello {}!
+
+      We're excited to announce that DevOpsDays is returning to Baltimore!  From what we know of {}, your organization seems 
+      like it would be a good fit for sponsorship. We wanted to present you with an opportunity to engage with the thriving tech 
+      community of the Baltimore metro area.<br />
+      <br />
+      DevOpsDays is a worldwide series of technical conferences covering topics of software development, IT infrastructure operations, 
+      and the intersection between them. This is the 4th year of the Baltimore DevOpsDays event.  This year's event will be returning 
+      to the IMET in the Inner Harbor of Baltimore on May 23rd-24th.  We expect around 250 IT professionals from the Baltimore Metro 
+      and DMV areas.<br />
+      <br />
+      The services available for each sponsor level can be found on our <a href="https://devopsdays.org/events/2023-baltimore/sponsor" target="_blank">Sponsor page</a>, 
+      and additional questions may be addressed by our <a href="https://docs.google.com/document/d/1W7a6wikgCoBSvW2yeGUhYDR3dERGnk43/edit?usp=sharing&ouid=105937644192212593428&rtpof=true&sd=true" target="_blank">FAQ</a>.<br />
+      <br />
+      What other questions can I answer for you?  If you'd like, I'd be happy to jump on a call to talk about the best approaches to sponsorship.<br />
+      <br />
+      -{}, and the rest of the DevOpsDays Baltimore Team
+    """.format(contact_name, sponsor_company, from_name)
 
     message["To"] = to_email
     message["From"] = from_emails
@@ -71,7 +92,7 @@ def create_cold_sponsor_draft(creds, to_email, from_emails, contact_name, sponso
 
 def main():
   creds = login()
-  create_cold_sponsor_draft(creds, "test@test.com", ["cfarmer@baltimoredevopsdays.org", "baltimore@baltmoredevopsdays.org"], "test contact", "test company")
+  create_cold_sponsor_draft(creds, "test@test.com", ["cfarmer@baltimoredevopsdays.org", "baltimore@baltmoredevopsdays.org"], "Chase Farmer", "test contact", "test company")
 
 if __name__ == "__main__":
   main()
