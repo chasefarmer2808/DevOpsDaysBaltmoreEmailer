@@ -42,7 +42,7 @@ def login():
   return creds
 
 def create_cold_sponsor_draft(creds, to_email, from_emails, from_name, contact_name, sponsor_company):
-  if contact_name is None:
+  if contact_name is None or contact_name == "":
     contact_name = "there"
 
   try:
@@ -108,10 +108,16 @@ def read_cold_contacts_from_csv(filename, take):
 
 def main():
   creds = login()
-  create_cold_sponsor_draft(creds, "test@test.com", ["cfarmer@baltimoredevopsdays.org", "baltimore@baltmoredevopsdays.org"], "Chase Farmer", "test contact", "test company")
   
   cold_contacts = read_cold_contacts_from_csv("hitlist.csv", 1)
-  pprint.pprint(cold_contacts)
+
+  for contact in cold_contacts:
+    to_email = contact["Email"]
+    from_emails = ["cfarmer@baltimoredevopsdays.org", "baltimore@baltmoredevopsdays.org"]
+    from_name = "Chase Farmer"
+    contact_name = contact["Contact Name"]
+    company = contact["Company"]
+    create_cold_sponsor_draft(creds, to_email, from_emails, from_name, contact_name, company)
 
 if __name__ == "__main__":
   main()
