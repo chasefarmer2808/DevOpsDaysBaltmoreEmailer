@@ -1,5 +1,7 @@
 import os.path
 import base64
+import csv
+import pprint
 
 from email.message import EmailMessage
 from email.mime.text import MIMEText
@@ -90,9 +92,26 @@ def create_cold_sponsor_draft(creds, to_email, from_emails, from_name, contact_n
 
   return draft
 
+def read_cold_contacts_from_csv(filename, take):
+  cold_contacts = []
+
+  with open(filename, newline="") as csvfile:
+      reader = csv.DictReader(csvfile)
+      for row in reader:
+        if row["Previous Sponsor?"].lower() == "no" and row["Initial Contact Email By"] == "":
+          cold_contacts.append(row)
+          
+          if len(cold_contacts) == take:
+            break
+
+  return cold_contacts
+
 def main():
   creds = login()
   create_cold_sponsor_draft(creds, "test@test.com", ["cfarmer@baltimoredevopsdays.org", "baltimore@baltmoredevopsdays.org"], "Chase Farmer", "test contact", "test company")
+  
+  cold_contacts = read_cold_contacts_from_csv("hitlist.csv", 1)
+  pprint.pprint(cold_contacts)
 
 if __name__ == "__main__":
   main()
