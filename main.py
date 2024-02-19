@@ -4,6 +4,7 @@ import csv
 import argparse
 import pick
 import glob
+import email_templates
 
 from email.message import EmailMessage
 from dotenv import load_dotenv
@@ -13,6 +14,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
 
 load_dotenv()
 
@@ -30,6 +32,8 @@ COMMAND_OPTS = [
         'short_description': 'Create ticket announcement drafts'
     }
 ]
+
+creds = None
 
 
 def login():
@@ -204,8 +208,69 @@ def handle_args(args):
 def handle_ticket_command(data_file):
     attendees = read_attendees_from_csv(data_file)
 
+    draft_limit = len(attendees)
+
+    if 'EMAIL_LIMIT' in os.environ:
+        draft_limit = int(os.environ["EMAIL_LIMIT"])
+    print(f'Creating drafts for {draft_limit} previous attendees...')
+
+    for contact in attendees[:draft_limit]:
+        email_opts = {
+            'subject': 'DevOpsDays Baltimore 2024 Early Bird Tickets on Sale!',
+            'to_email': contact["Email"],
+            'from_name': os.environ["SENDER_NAME"],
+            'content': email_templates.ticket_announcement(
+                from_name=os.environ['SENDER_NAME'],
+                attendee_name=contact['First Name'],
+                prev_year='2023',
+                curr_year='2024',
+            )
+        }
+
+        print(f'Creating draft for {email_opts["to_email"]}...')
+        create_draft(email_opts)
+        print("done")
+
+
+def create_draft(opts):
+    global creds
+
+    from_emails = ["baltimore@baltmoredevopsdays.org"]
+    if 'SENDER_EMAIL' in os.environ:
+        from_emails.append(os.environ['SENDER_EMAIL'])
+
+    try:
+        # create gmail api client
+        service = build("gmail", "v1", credentials=creds)
+
+        message = EmailMessage()
+        content = opts['content']
+
+        message["To"] = opts['to_email']
+        message["From"] = from_emails
+        message["Subject"] = opts['subject']
+        message.add_header('Content-Type', 'text/html')
+        message.set_payload(content)
+
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        create_message = {"message": {"raw": encoded_message}}
+
+        draft = (
+            service.users().drafts().create(userId="me", body=create_message).execute()
+        )
+
+        print(f'Draft id: {draft["id"]}\nDraft message: {draft["message"]}')
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        draft = None
+
+    return draft
+
 
 def main():
+    global creds
     creds = login()
     print("Successfully logged in to Google.")
     print(f'Email Sender: {os.environ["SENDER_NAME"]}')
